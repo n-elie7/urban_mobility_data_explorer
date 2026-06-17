@@ -34,3 +34,17 @@ class TripResponse(BaseModel):
     is_inter_borough: bool | None
 
     model_config = {"from_attributes": True}
+# A lightweight version used for dashboard tables and lists.
+# Only includes the fields needed to display each row, reducing unnecessary data transfer.
+class TripSummary(BaseModel):
+    trip_id: int
+    pickup_datetime: datetime
+    dropoff_datetime: datetime
+    trip_distance: float | None
+    pu_location_id: int | None
+    do_location_id: int | None
+    fare_amount: float | None
+    total_amount: float | None
+    tip_pct: float | None
+
+    model_config = {"from_attributes": True}

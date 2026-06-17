@@ -48,3 +48,22 @@ class TripSummary(BaseModel):
     tip_pct: float | None
 
     model_config = {"from_attributes": True}
+# Query params the frontend can send to filter/sort trips.
+# All fields optional the user picks whichever filters they want.
+class TripFilterParams(BaseModel):
+    start_date: datetime | None = None
+    end_date: datetime | None = None
+    pu_location_id: int | None = None
+    do_location_id: int | None = None
+    min_distance: float | None = None
+    max_distance: float | None = None
+    min_fare: float | None = None
+    max_fare: float | None = None
+    is_weekend: bool | None = None
+    payment_type_id: int | None = None
+
+    sort_by: str = "pickup_datetime"
+    sort_order: str = "desc"
+
+    page: int = 1
+    page_size: int = 50

@@ -1,6 +1,7 @@
 from typing import Optional, List
 from datetime import date
 
+#need to fix the import for APIRouter, Depends, Query, HTTPException
 from fastapi import APIRouter, Depends, Query, HTTPException
 from sqlalchemy.orm import Session
 from sqlalchemy import and_
@@ -8,6 +9,8 @@ from sqlalchemy import and_
 from app.api.deps import get_db_session, pagination_params, PaginationParams
 from app.models.trip import Trip
 from app.models.zone import TaxiZone
+
+# need the schems trip file
 from app.schema.trip import TripResponse
 
 router = APIRouter(prefix="/trips", tags=["trips"])

@@ -1,3 +1,4 @@
+#need to fix the import for Depends, HTTPException, Query
 from fastapi import Depends, HTTPException, Query
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -39,5 +40,5 @@ async def get_zone_or_404(
 
 
 def get_db_session(db: AsyncSession = Depends(get_db)) -> AsyncSession:
-    
+
     return db

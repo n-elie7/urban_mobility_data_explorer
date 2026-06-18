@@ -1,25 +1,35 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, Query
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.deps import get_db_session
+from app.database.session import get_db
 from app.models.trip import Trip
 from app.schemas.trip import TripResponse
+from datetime import datetime
 
-router = APIRouter(prefix="/trips", tags=["trips"])
+router = APIRouter()
 
+@router.get("", response_model=list[TripResponse])
+async def list_trips(
+    db: AsyncSession = Depends(get_db),
+    start_date: datetime | None = None,
+    end_date: datetime | None = None,
+    min_distance: float | None = None,
+    max_distance: float | None = None,
+    limit: int = Query(100, le=1000),
+    offset: int = 0
+    ):
+    statement = select(Trip)
+    if start_date:
+        statement = statement.where(Trip.pickup_datetime >= start_date)
+    if end_date:
+        statement = statement.where(Trip.pickup_datetime < end_date)
+    if min_distance is not None:
+        statement = statement.where(Trip.trip_distance >= min_distance)
+    if max_distance is not None:
+        statement = statement.where(Trip.trip_distance <= max_distance)
 
-@router.get("/", response_model=list[TripResponse])
-async def list_trips(db: AsyncSession = Depends(get_db_session)):
-    result = await db.execute(select(Trip).limit(100))
-    return result.scalars().all()
+    statement = statement.order_by(Trip.pickup_datetime).limit(limit).offset(offset)
 
-
-@router.get("/{trip_id}", response_model=TripResponse)
-async def get_trip(trip_id: int, db: AsyncSession = Depends(get_db_session)):
-    stmt = select(Trip).where(Trip.trip_id == trip_id)
-    result = await db.execute(stmt)
-    trip = result.scalar_one_or_none()
-    if not trip:
-        raise HTTPException(status_code=404, detail=f"Trip {trip_id} not found")
-    return trip
+    rows = (await db.execute(statement)).scalars().all()
+    return rows

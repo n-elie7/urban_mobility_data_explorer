@@ -1,20 +1,35 @@
-from fastapi import APIRouter, Depends, Query
-from sqlalchemy import select
+from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import text
+from app.database.session import get_db
 
-from app.api.deps import get_db_session, get_zone_or_404
-from app.models.zone import TaxiZone
-from app.schemas.zone import ZoneResponse
+router = APIRouter()
 
-router = APIRouter(prefix="/zones", tags=["zones"])
+@router.get("/geojson")
+async def zones_geojson(db: AsyncSession = Depends(get_db)):
+    sql = text(
+        """
+        SELECT json_build_object(
+          'type', 'FeatureCollection',
+          'features', COALESCE(json_agg(f), '[]'::json)
+        )
+        FROM (
+          SELECT json_build_object(
+            'type', 'Feature',
+            'geometry', ST_AsGeoJSON(z.geom)::json,
+            'properties', json_build_object(
+                'location_id', z.location_id,
+                'zone', z.zone,
+                'borough', b.name,
+                'service_zone', z.service_zone
+            )
+          ) AS f
+          FROM taxi_zone z
+          LEFT JOIN borough b ON b.borough_id = z.borough_id
+          WHERE z.geom IS NOT NULL
+        ) sub
+        """
+    )
+    response = await db.execute(sql)
+    return response.scalar()
 
-
-@router.get("/", response_model=list[ZoneResponse])
-async def list_zones(db: AsyncSession = Depends(get_db_session)):
-    result = await db.execute(select(TaxiZone).order_by(TaxiZone.location_id))
-    return result.scalars().all()
-
-
-@router.get("/{zone_id}", response_model=ZoneResponse)
-async def get_zone(zone: TaxiZone = Depends(get_zone_or_404)):
-    return zone

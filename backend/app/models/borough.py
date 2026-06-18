@@ -8,4 +8,4 @@ class Borough(Base):
     borough_id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(String(40), unique=True, index=True)
 
-    zones: Mapped[list["TaxiZone"]] = relationship(back_populates="borough")  # noqa: F821
+    zones: Mapped[list["TaxiZone"]] = relationship(back_populates="borough")

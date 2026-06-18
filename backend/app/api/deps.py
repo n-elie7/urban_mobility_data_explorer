@@ -9,8 +9,16 @@ from app.models.zone import TaxiZone
 class PaginationParams:
     def __init__(
         self,
-        skip: int = Query(default=0, ge=0, description="Number of records to skip"),
-        limit: int = Query(default=100, ge=1, le=1000, description="Max records to return"),
+        skip: int = Query(
+            default=0, 
+            ge=0, 
+            description="Number of records to skip"),
+
+        limit: int = Query(
+            default=100, 
+            ge=1, 
+            le=1000, 
+            description="Max records to return"),
     ):
         self.skip = skip
         self.limit = limit
@@ -39,5 +47,5 @@ async def get_zone_or_404(
 
 
 def get_db_session(db: AsyncSession = Depends(get_db)) -> AsyncSession:
-    
+
     return db

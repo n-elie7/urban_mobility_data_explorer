@@ -7,6 +7,8 @@ class ZoneResponse(BaseModel):
     service_zone: str | None
     borough: str | None
 
+    model_config = {"from_attributes": True}
+
 class ZoneGeoJSON(BaseModel):
     """A GeoJSON FeatureCollection ready for Leaflet."""
     type: str = "FeatureCollection"

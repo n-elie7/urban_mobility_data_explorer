@@ -1,4 +1,3 @@
-#need to fix the import for Depends, HTTPException, Query
 from fastapi import Depends, HTTPException, Query
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -10,8 +9,16 @@ from app.models.zone import TaxiZone
 class PaginationParams:
     def __init__(
         self,
-        skip: int = Query(default=0, ge=0, description="Number of records to skip"),
-        limit: int = Query(default=100, ge=1, le=1000, description="Max records to return"),
+        skip: int = Query(
+            default=0, 
+            ge=0, 
+            description="Number of records to skip"),
+
+        limit: int = Query(
+            default=100, 
+            ge=1, 
+            le=1000, 
+            description="Max records to return"),
     ):
         self.skip = skip
         self.limit = limit

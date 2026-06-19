@@ -1,12 +1,12 @@
-from fastapi import APIRouter, Depends, Query
-from sqlalchemy import select, func
+from fastapi import APIRouter, Depends
+from sqlalchemy import select, func, text
 from sqlalchemy.ext.asyncio import AsyncSession
 from datetime import datetime
 from app.database.session import get_db
-from app.models.trip import Trip
-from app.models.zone import TaxiZone
 
-router = APIRouter(prefix="/analytics", tags=["analytics"])
+from app.models.trip import Trip
+
+router = APIRouter()
 
 @router.get("/summary")
 async def summary(db: AsyncSession = Depends(get_db)):
@@ -23,84 +23,60 @@ async def summary(db: AsyncSession = Depends(get_db)):
         "avg_distance": round(float(row.avg_distance), 2) if row.avg_distance else None,
     }
 
+def _window(start_date: datetime | None, end_date: datetime | None):
+    clauses, params = [], {}
+    if start_date:
+        clauses.append("pickup_datetime >= :start_date")
+        params["start_date"] = start_date
+    if end_date:
+        clauses.append("pickup_datetime < :end_date")
+        params["end_date"] = end_date
+    where = ("WHERE " + " AND ".join(clauses)) if clauses else ""
+    return where, params
+
 
 @router.get("/hourly-demand")
-async def hourly_demand(
-    db: AsyncSession = Depends(get_db),
-    start_date: datetime | None = None,
-    end_date: datetime | None = None,
-):
-    stmt = select(
-        Trip.pickup_hour,
-        func.count(Trip.trip_id).label("trips"),
-        func.avg(Trip.fare_amount).label("avg_fare"),
-    )
-    if start_date:
-        stmt = stmt.where(Trip.pickup_datetime >= start_date)
-    if end_date:
-        stmt = stmt.where(Trip.pickup_datetime < end_date)
-    
-    stmt = stmt.group_by(Trip.pickup_hour).order_by(Trip.pickup_hour)
-    result = await db.execute(stmt)
-    return [
-        {"pickup_hour": row.pickup_hour, "trips": row.trips, "avg_fare": round(float(row.avg_fare), 2) if row.avg_fare else None}
-        for row in result.all()
-    ]
+async def hourly_demand(db: AsyncSession = Depends(get_db),
+                        start_date: datetime | None = None, end_date: datetime | None = None):
+    where, params = _window(start_date, end_date)
+    sql = text(f"""
+        SELECT pickup_hour, COUNT(*) AS trips, AVG(fare_amount) AS avg_fare
+        FROM trip {where}
+        GROUP BY pickup_hour ORDER BY pickup_hour
+    """)
+    rows = (await db.execute(sql, params)).mappings().all()
+    return [dict(r) for r in rows]
 
 
 @router.get("/by-zone")
-async def by_zone(
-    db: AsyncSession = Depends(get_db),
-    start_date: datetime | None = None,
-    end_date: datetime | None = None,
-):
-    """Per-pickup-zone aggregates keyed by location_id."""
-    stmt = select(
-        TaxiZone.location_id,
-        TaxiZone.zone,
-        func.count(Trip.trip_id).label("trips"),
-        func.avg(Trip.fare_amount).label("avg_fare"),
-        func.avg(Trip.tip_pct).label("avg_tip_pct"),
-    ).join(TaxiZone, Trip.pu_location_id == TaxiZone.location_id)
-    
-    if start_date:
-        stmt = stmt.where(Trip.pickup_datetime >= start_date)
-    if end_date:
-        stmt = stmt.where(Trip.pickup_datetime < end_date)
-    
-    stmt = stmt.group_by(TaxiZone.location_id, TaxiZone.zone).order_by(func.count(Trip.trip_id).desc())
-    result = await db.execute(stmt)
-    return [
-        {
-            "location_id": row.location_id,
-            "zone": row.zone,
-            "trips": row.trips,
-            "avg_fare": round(float(row.avg_fare), 2) if row.avg_fare else None,
-            "avg_tip_pct": round(float(row.avg_tip_pct), 2) if row.avg_tip_pct else None,
-        }
-        for row in result.all()
-    ]
+async def by_zone(db: AsyncSession = Depends(get_db),
+                  start_date: datetime | None = None, end_date: datetime | None = None):
+    """Per-pickup-zone aggregates choropleth values keyed by location_id."""
+    where, params = _window(start_date, end_date)
+    sql = text(f"""
+        SELECT z.location_id, z.zone, b.name AS borough,
+               COUNT(*) AS trips, AVG(t.fare_amount) AS avg_fare,
+               AVG(t.tip_pct) AS avg_tip_pct
+        FROM trip t
+        JOIN taxi_zone z ON z.location_id = t.pu_location_id
+        LEFT JOIN borough b ON b.borough_id = z.borough_id
+        {where}
+        GROUP BY z.location_id, z.zone, b.name
+        ORDER BY trips DESC
+    """)
+    rows = (await db.execute(sql, params)).mappings().all()
+    return [dict(r) for r in rows]
 
 
 @router.get("/flows")
-async def flows(db: AsyncSession = Depends(get_db), top: int = Query(50, le=500)):
-    """Top origin to destination pairs for flow analysis."""
-    stmt = select(
-        Trip.pu_location_id,
-        Trip.do_location_id,
-        func.count(Trip.trip_id).label("trips"),
-    ).where(
-        Trip.pu_location_id.isnot(None),
-        Trip.do_location_id.isnot(None),
-    ).group_by(
-        Trip.pu_location_id,
-        Trip.do_location_id,
-    ).order_by(
-        func.count(Trip.trip_id).desc()
-    ).limit(top)
-    
-    result = await db.execute(stmt)
-    return [
-        {"pu_location_id": row.pu_location_id, "do_location_id": row.do_location_id, "trips": row.trips}
-        for row in result.all()
-    ]
+async def flows(db: AsyncSession = Depends(get_db), top: int = 50):
+    """Top origin to destination pairs for a flow map."""
+    sql = text("""
+        SELECT pu_location_id, do_location_id, COUNT(*) AS trips
+        FROM trip
+        WHERE pu_location_id IS NOT NULL AND do_location_id IS NOT NULL
+        GROUP BY pu_location_id, do_location_id
+        ORDER BY trips DESC LIMIT :top
+    """)
+    rows = (await db.execute(sql, {"top": top})).mappings().all()
+    return [dict(r) for r in rows]

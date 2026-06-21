@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Urban Mobility Dashboard</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <header>
+    <h1>Urban Mobility Dashboard</h1>
+    <p class="sub">Urban movement &amp; economics, Yellow Taxi trip records</p>
+  </header>
+
+  <section class="controls">
+    <label>From <input type="datetime-local" id="start" /></label>
+    <label>To <input type="datetime-local" id="end" /></label>
+    <label>Metric
+      <select id="metric">
+        <option value="trips">Trip volume</option>
+        <option value="avg_fare">Avg fare</option>
+        <option value="avg_tip_pct">Avg tip %</option>
+      </select>
+    </label>
+    <button id="apply">Apply</button>
+  </section>
+
+  <main class="grid">
+    <div class="card map-card">
+      <h2>Pickup choropleth</h2>
+      <div id="map"></div>
+    </div>
+    <div class="card">
+      <h2>Demand by hour</h2>
+      <canvas id="hourlyChart"></canvas>
+    </div>
+    <div class="card">
+      <h2>Top pickup zones</h2>
+      <canvas id="zoneChart"></canvas>
+    </div>
+  </main>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/map.js"></script>
+  <script src="js/charts.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

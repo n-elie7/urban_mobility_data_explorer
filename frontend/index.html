@@ -3,40 +3,57 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Urban Mobility Dashboard</title>
+  <title>TaxiPulse | NYC Yellow Cab Analytics</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-  <link rel="stylesheet" href="css/styles.css" />
+  <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
   <header>
-    <h1>Urban Mobility Dashboard</h1>
-    <p class="sub">Urban movement &amp; economics, Yellow Taxi trip records</p>
+    <h1>TaxiPulse</h1>
+    <p class="sub">The heartbeat of NYC, Yellow Cab demand, fares, and flows</p>
   </header>
 
   <section class="controls">
-    <label>From <input type="datetime-local" id="start" /></label>
-    <label>To <input type="datetime-local" id="end" /></label>
+    <label>From <input type="datetime-local" id="start_date" /></label>
+    <label>To <input type="datetime-local" id="end_date" /></label>
+    <div class="presets" id="presets"></div>
     <label>Metric
       <select id="metric">
         <option value="trips">Trip volume</option>
-        <option value="avg_fare">Avg fare</option>
-        <option value="avg_tip_pct">Avg tip %</option>
+        <option value="average_fare">Average fare</option>
+        <option value="average_tip_percent">Average tip %</option>
       </select>
+    </label>
+    <label class="toggle">
+      <input type="checkbox" id="show_flows" />
+      Show top flows
     </label>
     <button id="apply">Apply</button>
   </section>
 
   <main class="grid">
     <div class="card map-card">
-      <h2>Pickup choropleth</h2>
+      <div class="card-header">
+        <h2>Pickup choropleth</h2>
+        <div class="card-actions">
+          <a class="download" id="download_zones" href="#">Zones CSV</a>
+          <a class="download" id="download_flows" href="#">Flows CSV</a>
+        </div>
+      </div>
       <div id="map"></div>
     </div>
     <div class="card">
-      <h2>Demand by hour</h2>
+      <div class="card-header">
+        <h2>Demand by hour</h2>
+        <a class="download" id="download_hourly" href="#">Download CSV</a>
+      </div>
       <canvas id="hourlyChart"></canvas>
     </div>
     <div class="card">
-      <h2>Top pickup zones</h2>
+      <div class="card-header">
+        <h2>Top pickup zones</h2>
+        <a class="download" id="download_top_zones" href="#">Download CSV</a>
+      </div>
       <canvas id="zoneChart"></canvas>
     </div>
   </main>

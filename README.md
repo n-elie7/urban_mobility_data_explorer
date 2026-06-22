@@ -7,6 +7,13 @@ results as a choropleth and supporting charts.
 
 ---
 
+Scrum Board: [Link](https://aluteam-6.atlassian.net/jira/software/projects/SCRUM/boards/1?atlOrigin=eyJpIjoiMTY3NzNkNjU4MWVlNGZkMTlhMmQ3ZDNjN2U5MmE2Y2UiLCJwIjoiaiJ9)
+
+Track Sheet: [Link](https://docs.google.com/spreadsheets/d/156rAJRd0SKgfNaalEYLMjMV3D4jPM0TPhtpHK6iAikc/edit?usp=sharing)
+
+Youtube Video: [Link](https://youtu.be/jrr8Fe66DE0)
+
+
 ## Architecture
 
 Three containers orchestrated by `docker-compose.yml`:

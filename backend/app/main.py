@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 
-from backend.app.api.routes import analytics, health, trip, zones
+from app.api.routes import analytics, health, trip, zones
 from .core.logging import configure_logging
 from .core.config import get_settings
 from fastapi.middleware.cors import CORSMiddleware

@@ -335,5 +335,8 @@ docker compose down -v
 docker compose down -v       # drop containers + the pgdata volume
 rm -rf data/processed/*      # optional: clear transparency log
 make up
-make pipeline-all
+make pipeline-seed
+make pipeline-zones
+make pipeline-lookup
+make pipeline-trips
 ```

@@ -155,6 +155,64 @@ header h1 {
     border-color:#37404e;
 }
 
+.insights {
+    display:grid;
+    grid-template-columns:repeat(3, 1fr);
+    gap:16px;
+    padding:0 28px 16px;
+}
+
+.insights:empty {
+    padding:0;
+}
+
+.insight {
+    background:var(--card);
+    border:1px solid #232833;
+    border-radius:14px;
+    padding:14px 18px;
+    position:relative;
+    overflow:hidden;
+}
+
+.insight::before {
+    content:"";
+    position:absolute;
+    left:0;
+    top:0;
+    bottom:0;
+    width:3px;
+    background:var(--accent);
+}
+
+.insight-label {
+    color:var(--muted);
+    font-size:11px;
+    text-transform:uppercase;
+    letter-spacing:0.08em;
+    margin-bottom:6px;
+}
+
+.insight-value {
+    color:var(--ink);
+    font-size:20px;
+    font-weight:600;
+    margin-bottom:4px;
+    line-height:1.2;
+}
+
+.insight-caption {
+    color:var(--muted);
+    font-size:12px;
+    line-height:1.4;
+}
+
+@media (max-width:900px){
+    .insights{
+        grid-template-columns:1fr;
+    }
+}
+
 #map {
     height:520px;
     border-radius:10px;

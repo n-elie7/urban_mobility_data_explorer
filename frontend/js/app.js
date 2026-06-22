@@ -40,6 +40,76 @@ async function refresh() {
     dashboardState.flows = [];
     clearFlows();
   }
+
+  renderInsights(metric, metricLabel);
+}
+
+function renderInsights(metric, metricLabel) {
+  const container = document.getElementById("insights");
+  container.innerHTML = "";
+
+  const { hourly, zones, flows } = dashboardState;
+  const cards = [];
+
+  if (hourly.length > 0) {
+    const peakHour = hourly.reduce((best, row) => (row.trips > best.trips ? row : best));
+    const totalHourlyTrips = hourly.reduce((sum, row) => sum + (row.trips || 0), 0);
+    const averageTripsPerHour = totalHourlyTrips / hourly.length;
+    const liftPercent = Math.round((peakHour.trips / averageTripsPerHour - 1) * 100);
+    cards.push({
+      label: "Peak hour",
+      value: `${String(peakHour.pickup_hour).padStart(2, "0")}:00`,
+      caption: `${peakHour.trips.toLocaleString()} trips, ${liftPercent}% above the average hour in this window.`,
+    });
+  }
+
+  if (zones.length > 0) {
+    const totalZoneTrips = zones.reduce((sum, row) => sum + (row.trips || 0), 0);
+    const topZone = zones.reduce((best, row) => (row.trips > best.trips ? row : best));
+    const sharePercent = ((topZone.trips / totalZoneTrips) * 100).toFixed(1);
+    const boroughSuffix = topZone.borough ? ` (${topZone.borough})` : "";
+    cards.push({
+      label: "Top pickup zone",
+      value: (topZone.zone || `Zone ${topZone.location_id}`) + boroughSuffix,
+      caption: `${topZone.trips.toLocaleString()} trips, ${sharePercent}% of all pickups in this window.`,
+    });
+  }
+
+  if (flows.length > 0) {
+    const topFlow = flows[0];
+    cards.push({
+      label: "Busiest corridor",
+      value: `Zone ${topFlow.pu_location_id} → Zone ${topFlow.do_location_id}`,
+      caption: `${topFlow.trips.toLocaleString()} trips on this single OD pair, drawn as the brightest arc on the map.`,
+    });
+  } else if (zones.length > 0) {
+    const sortedByTrips = [...zones].sort((first, second) => (second.trips || 0) - (first.trips || 0));
+    const topTenTotal = sortedByTrips.slice(0, 10).reduce((sum, row) => sum + (row.trips || 0), 0);
+    const grandTotal = sortedByTrips.reduce((sum, row) => sum + (row.trips || 0), 0);
+    const concentrationPercent = Math.round((topTenTotal / grandTotal) * 100);
+    cards.push({
+      label: "Demand concentration",
+      value: `Top 10 zones`,
+      caption: `account for ${concentrationPercent}% of all pickups, demand is heavily clustered. Toggle "Show top flows" for the corridor view.`,
+    });
+  }
+
+  if (cards.length === 0) {
+    container.innerHTML = `<div class="insight"><div class="insight-label">No data</div>` +
+      `<div class="insight-value">Apply a filter</div>` +
+      `<div class="insight-caption">Pick a date range that overlaps the loaded months, then click Apply.</div></div>`;
+    return;
+  }
+
+  for (const insight of cards) {
+    const card = document.createElement("div");
+    card.className = "insight";
+    card.innerHTML =
+      `<div class="insight-label">${insight.label}</div>` +
+      `<div class="insight-value">${insight.value}</div>` +
+      `<div class="insight-caption">${insight.caption}</div>`;
+    container.appendChild(card);
+  }
 }
 
 function downloadCsv(filename, rows) {

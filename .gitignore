@@ -6,4 +6,9 @@ venv/
 /backend/app/core/__pycache__
 /backend/app/api/__pycache__
 /backend/app/api/routes/__pycache__
-/data/raw
+/data/raw/
+/backend/app/database/__pycache__
+/backend/app/schemas/__pycache__
+/backend/app/models/__pycache__
+/backend/pipeline/__pycache__
+/data/processed/

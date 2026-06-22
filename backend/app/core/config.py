@@ -14,7 +14,7 @@ class Settings(BaseSettings):
 
     api_title: str = "Urban Mobility Data Explorer"
     log_level: str = "INFO"
-    cors_origins: str = "http://localhost:8080"
+    cors_origins: str = "http://localhost:8080,http://localhost:8081"  # comma-separated list of allowed CORS origins for the API
 
     # pipeline default batch size
     trip_batch_size: int = 50_000
